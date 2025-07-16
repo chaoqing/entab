@@ -174,6 +174,15 @@ impl<'r> ReadBuffer<'r> {
                 }
             }
         }
+        if self.consumed > self.buffer.len() {
+            let size = self.consumed - consumed;
+            self.consumed = consumed;
+            if !self.refill()? {
+                return Ok(None);
+            }
+            consumed = 0;
+            self.consumed = size;
+        }
         self.record_pos += 1;
         let mut record = T::default();
         T::get(&mut record, &self.buffer[consumed..self.consumed], state)
