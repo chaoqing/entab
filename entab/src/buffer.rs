@@ -174,14 +174,14 @@ impl<'r> ReadBuffer<'r> {
                 }
             }
         }
-        if self.consumed > self.buffer.len() {
-            let size = self.consumed - consumed;
+                    let size = self.consumed - consumed;
+while self.consumed > self.buffer.len() {
             self.consumed = consumed;
             if !self.refill()? {
                 return Ok(None);
             }
-            consumed = 0;
-            self.consumed = size;
+                        self.consumed = size;
+consumed = 0;
         }
         self.record_pos += 1;
         let mut record = T::default();
