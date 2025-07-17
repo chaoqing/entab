@@ -95,7 +95,7 @@ impl<'r> ReadBuffer<'r> {
         let mut capacity = buffer.capacity();
         // if we haven't read anything, but we want more data expand the buffer
         if self.consumed == 0 && buffer.len() * 2 > capacity {
-            buffer.reserve(2 * capacity);
+            buffer.reserve(capacity);
             capacity = buffer.capacity();
         };
 
