@@ -328,4 +328,54 @@ mod tests {
         assert_eq!(n_mzs, 12000);
         Ok(())
     }
+
+    #[cfg(feature = "std")]
+    #[test]
+    fn test_array_chemstation_reader_byte_by_byte() -> Result<(), EtError> {
+        use std::io::{Read, Result};
+
+        use crate::buffer::ReadBuffer;
+
+        struct ByteByByteReader {
+            buf: &'static [u8],
+            pos: usize,
+        }
+
+        impl ByteByByteReader {
+            fn new(buf: &'static [u8]) -> Self {
+                ByteByByteReader { buf, pos: 0 }
+            }
+        }
+
+        impl Read for ByteByByteReader {
+            fn read(&mut self, buf: &mut [u8]) -> Result<usize> {
+                if self.pos < self.buf.len() && !buf.is_empty() {
+                    buf[0] = self.buf[self.pos];
+                    self.pos += 1;
+                    Ok(1)
+                } else {
+                    Ok(0)
+                }
+            }
+        }
+
+        let data: &[u8] = include_bytes!("../../../tests/data/test_179_fid.ch");
+        let reader = ByteByByteReader::new(data);
+        let reader = ReadBuffer::from_reader(Box::new(reader), None)?;
+        let mut reader = ChemstationArrayReader::new(reader, None)?;
+        let _ = reader.metadata();
+        assert_eq!(reader.headers(), ["time", "intensity"]);
+
+        let ChemstationArrayRecord { time, intensity } = reader.next()?.unwrap();
+        assert!((time - 0.00166095).abs() < 0.000001);
+        assert_eq!(intensity, 7.7457031249999995);
+
+        let mut n_mzs = 1;
+        while reader.next()?.is_some() {
+            n_mzs += 1;
+        }
+        assert_eq!(n_mzs, 12000);
+
+        Ok(())
+    }
 }
